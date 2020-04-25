@@ -28,7 +28,7 @@ except ImportError:
     PYQT5 = False
 
 from .lib import newIcon, labelValidator
-
+from constants import class_names
 # TODO:
 # - Calculate optimal position so as not to go out of screen area.
 
@@ -46,33 +46,120 @@ class ChoiceDialog(QDialog):
         self.edit.editingFinished.connect(self.postProcess)
         layout = QVBoxLayout()
         layout.addWidget(self.edit)
-        self.buttonBox = bb = BB(BB.Save | BB.Ok | BB.Cancel | BB.Discard , Qt.Horizontal, self)
-        #bb.button(BB.Ok).setIcon(newIcon('done'))
-        #bb.button(BB.Cancel).setIcon(newIcon('undo'))
-        bb.button(BB.Ok).setText('Head')
-        bb.button(BB.Discard).setText('Empty')
-        bb.button(BB.Save).setText('Neck')
-        bb.button(BB.Cancel).setIcon(newIcon('undo'))
 
-        bb.button(BB.Ok).clicked.connect(self.head)
-        bb.button(BB.Discard).clicked.connect(self.empty)
-        bb.button(BB.Save).clicked.connect(self.neck)
+        self.buttonBox = bb = BB(BB.Abort | BB.Ok | BB.SaveAll | BB.Discard | BB.Apply | BB.Retry |
+                                 BB.Cancel | BB.Reset | BB.Save | BB.Yes | BB.Ignore | BB.Help | BB.RestoreDefaults |
+                                 BB.No | BB.NoToAll | BB.Open, Qt.Vertical, self)
+
+        #
+        # -------------------------------------------------
+        #
+
+        bb.button(BB.Yes).setText(class_names[0])
+        bb.button(BB.No).setText(class_names[1])
+        bb.button(BB.NoToAll).setText(class_names[2])
+        bb.button(BB.Ok).setText(class_names[3])
+        bb.button(BB.Abort).setText(class_names[4])
+        bb.button(BB.Cancel).setText(class_names[5])
+        bb.button(BB.Save).setText(class_names[6])
+        bb.button(BB.SaveAll).setText(class_names[7])
+        bb.button(BB.Open).setText(class_names[8])
+        bb.button(BB.Retry).setText(class_names[9])
+        bb.button(BB.Ignore).setText(class_names[10])
+        bb.button(BB.Discard).setText(class_names[11])
+        bb.button(BB.Apply).setText(class_names[12])
+        bb.button(BB.Reset).setText(class_names[13])
+        bb.button(BB.RestoreDefaults).setText(class_names[14])
+        bb.button(BB.Help).setText(class_names[15])
+
+        #
+        # -------------------------------------------------
+        #
+
+        bb.button(BB.Yes).clicked.connect(self.p1)
+        bb.button(BB.No).clicked.connect(self.p2)
+        bb.button(BB.NoToAll).clicked.connect(self.p3)
+        bb.button(BB.Ok).clicked.connect(self.p4)
+        bb.button(BB.Abort).clicked.connect(self.p5)
+        bb.button(BB.Cancel).clicked.connect(self.p6)
+        bb.button(BB.Save).clicked.connect(self.p7)
+        bb.button(BB.SaveAll).clicked.connect(self.p8)
+        bb.button(BB.Open).clicked.connect(self.p9)
+        bb.button(BB.Retry).clicked.connect(self.p10)
+        bb.button(BB.Ignore).clicked.connect(self.p11)
+        bb.button(BB.Discard).clicked.connect(self.p12)
+        bb.button(BB.Apply).clicked.connect(self.p13)
+        bb.button(BB.Reset).clicked.connect(self.p14)
+        bb.button(BB.RestoreDefaults).clicked.connect(self.p15)
+        bb.button(BB.Help).clicked.connect(self.p16)
 
         bb.accepted.connect(self.validate)
         bb.rejected.connect(self.reject)
         layout.addWidget(bb)
         self.setLayout(layout)
 
-    def head(self):
-        self.edit.setText('Head')
+    def p1(self):
+        self.edit.setText(class_names[0])
         self.accept()
 
-    def empty(self):
-        self.edit.setText('Empty')
+    def p2(self):
+        self.edit.setText(class_names[1])
         self.accept()
 
-    def neck(self):
-        self.edit.setText('Neck')
+    def p3(self):
+        self.edit.setText(class_names[2])
+        self.accept()
+
+    def p4(self):
+        self.edit.setText(class_names[3])
+        self.accept()
+
+    def p5(self):
+        self.edit.setText(class_names[4])
+        self.accept()
+
+    def p6(self):
+        self.edit.setText(class_names[5])
+        self.accept()
+
+    def p7(self):
+        self.edit.setText(class_names[6])
+        self.accept()
+
+    def p8(self):
+        self.edit.setText(class_names[7])
+        self.accept()
+
+    def p9(self):
+        self.edit.setText(class_names[8])
+        self.accept()
+
+    def p10(self):
+        self.edit.setText(class_names[9])
+        self.accept()
+
+    def p11(self):
+        self.edit.setText(class_names[10])
+        self.accept()
+
+    def p12(self):
+        self.edit.setText(class_names[11])
+        self.accept()
+
+    def p13(self):
+        self.edit.setText(class_names[12])
+        self.accept()
+
+    def p14(self):
+        self.edit.setText(class_names[13])
+        self.accept()
+
+    def p15(self):
+        self.edit.setText(class_names[14])
+        self.accept()
+
+    def p16(self):
+        self.edit.setText(class_names[15])
         self.accept()
 
     def validate(self):

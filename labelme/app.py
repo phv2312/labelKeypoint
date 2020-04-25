@@ -31,6 +31,8 @@ import json
 from functools import partial
 from collections import defaultdict
 
+from constants import class_names
+
 try:
     from PyQt5.QtGui import *
     from PyQt5.QtCore import *
@@ -73,6 +75,9 @@ __appname__ = 'labelme'
 
 ### Utility functions and classes.
 
+INPUT_DIR = '/home/kan/Desktop/samples'
+OUTPUT_DIR = "/home/kan/Desktop/samples/labels"
+
 class WindowMixin(object):
     def menu(self, title, actions=None):
         menu = self.menuBar().addMenu(title)
@@ -90,14 +95,13 @@ class WindowMixin(object):
         self.addToolBar(Qt.LeftToolBarArea, toolbar)
         return toolbar
 
-
 class MainWindow(QMainWindow, WindowMixin):
     FIT_WINDOW, FIT_WIDTH, MANUAL_ZOOM = 0, 1, 2
 
     def __init__(self, filename=None, output=None):
         super(MainWindow, self).__init__()
         self.setWindowTitle(__appname__)
-        self.datadir = 'C:/Users/ljf_l/Desktop/coco_part/coco_part1'
+        self.datadir = INPUT_DIR
         with open(self.datadir+'/annot.json') as data_file:
             self.annot = json.load(data_file)
             print("number of label set: %d" % len(self.annot))
@@ -116,7 +120,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.itemsToShapes = []
 
         self.labelList.itemActivated.connect(self.labelSelectionChanged)
-        self.labelList.itemSelectionChanged.connect(self.labelSelectionChanged)
+        #self.labelList.itemSelectionChanged.connect(self.labelSelectionChanged)
         self.labelList.itemDoubleClicked.connect(self.editLabel)
         # Connect to itemChanged to detect checkbox changes.
         self.labelList.itemChanged.connect(self.labelItemChanged)
@@ -130,7 +134,6 @@ class MainWindow(QMainWindow, WindowMixin):
         self.labelListContainer.setLayout(listLayout)
         listLayout.addWidget(self.editButton)#, 0, Qt.AlignCenter)
         listLayout.addWidget(self.labelList)
-
 
         self.dock = QDockWidget('Polygon Labels', self)
         self.dock.setObjectName('Labels')
@@ -202,8 +205,7 @@ class MainWindow(QMainWindow, WindowMixin):
 
         create = action('Create\nPolygo&n', self.createShape,
                 'Ctrl+N', 'new', 'Draw a new polygon', enabled=False)
-        delete = action('Delete\nPolygon', self.deleteSelectedShape,
-                'Delete', 'delete', 'Delete', enabled=False)
+        delete = action('Next\nWithout Save', self.nextFileWithoutSave, enabled=True)
         #delete.setEnabled(True)
         copy = action('&Duplicate\nPolygon', self.copySelectedShape,
                 'Ctrl+D', 'copy', 'Create a duplicate of the selected polygon',
@@ -438,6 +440,45 @@ class MainWindow(QMainWindow, WindowMixin):
     def status(self, message, delay=5000):
         self.statusBar().showMessage(message, delay)
 
+    def nextFileWithoutSave(self):
+        self.imgCnt += 1
+        if self.imgCnt == len(self.imglist):
+            return
+        # update imgCnt
+
+        self.canvas.imgCnt = self.imgCnt
+        # init img info
+        self.img_id = self.imglist[self.imgCnt].split('.')[0].lstrip('0')
+        self.personNum = 1  # len(self.annot[self.img_id])
+        self.canvas.person_id = self.person_id = 1
+        self.labelDict = {}
+        self.person_bbox = [5, 5, 10, 10]  # self.annot[self.img_id][self.person_id-1]['bbox']
+        self.canvas.person_bbox = self.person_bbox
+
+        for i in range(self.personNum):
+            tmp = {}
+
+            for cls_name in class_names:
+                tmp[cls_name] = False
+
+            self.labelDict['person_' + str(i + 1)] = tmp
+
+        # self.prev_person.setEnabled(False)
+        # self.next_person.setEnabled(False)
+        # if self.person_id > 1:
+        #     self.prev_person.setEnabled(True)
+        # if self.person_id < self.personNum:
+        #     self.next_person.setEnabled(True)
+        self.next.setEnabled(False)
+
+        self.canvas.person_id = self.person_id
+        self.loadFile(os.path.join(self.dirname, self.imglist[self.imgCnt]))
+        self.setCreateMode()
+
+        self.canvas.paint_info = True
+        self.progress = [0, self.personNum]
+        self.canvas.update()
+
     def resetState(self):
         self.itemsToShapes = []
         self.labelList.clear()
@@ -514,13 +555,17 @@ class MainWindow(QMainWindow, WindowMixin):
         self.menus.labelList.exec_(self.labelList.mapToGlobal(point))
 
     def editLabel(self, item=None):
-        if not self.canvas.editing():
-            return
-        item = item if item else self.currentItem()
-        text = self.labelDialog.popUp(item.text())
-        if text is not None:
-            item.setText(text)
-            self.setDirty()
+        self.deleteSelectedLabel(text=item.text())
+        self.setDirty()
+        pass
+
+        # if not self.canvas.editing():
+        #     return
+        # item = item if item else self.currentItem()
+        # text = self.labelDialog.popUp(item.text())
+        # if text is not None:
+        #     item.setText(text)
+        #     self.setDirty()
 
     # React to canvas signals.
     def shapeSelectionChanged(self, selected=False):
@@ -626,6 +671,8 @@ class MainWindow(QMainWindow, WindowMixin):
         position MUST be in global coordinates.
         """
         text = self.choiceDialog.popUp()
+        print (text)
+
         if text is not None and not self.labelDict['person_'+str(self.person_id)][text]: # unlabeled part
             new_label = text + '_' +str(self.person_id)
             self.addLabel(self.canvas.setLastLabel(new_label), text)
@@ -635,19 +682,46 @@ class MainWindow(QMainWindow, WindowMixin):
             else:
                 self.actions.editMode.setEnabled(True)
             self.setDirty()
+
         elif text is not None: # labeled part
             self.labelDialog.popUp('Already label the "'+text+'" person '+str(self.person_id)+'!', notice=True)
             self.canvas.undoWrongLabel()
         else:
             self.canvas.undoWrongLabel()
+
         self.updateProgress()
+
+    def deleteSelectedLabel(self, text = u'head top_1'):
+        shape_idxs = [_id for _id, shape in enumerate(self.canvas.shapes)
+                      if shape is not None and shape.label == text]
+
+        if len(shape_idxs) == 0:
+            return
+        if len(shape_idxs) > 1:
+            raise Exception('WTF? why there are two label of %s' % text)
+
+        _id = shape_idxs[0]
+        _shape = self.canvas.shapes[_id]
+
+        # delete shape
+        self.canvas.selectedShape = _shape
+        self.canvas.deleteSelected()
+
+        # delete widget
+        self.remLabel(_shape)
+
 
     def updateProgress(self):
         cnt = 0
         for i in range(self.personNum):
             tmp = self.labelDict['person_' + str(i + 1)]
-            if tmp['Neck'] or tmp['Head'] or tmp['Empty']:
+
+            is_found = [cls_name in tmp for cls_name in class_names]
+            if any(is_found):
                 cnt += 1
+            else:
+                raise Exception('Unknown: %s', str(tmp.keys()))
+
         self.progress[0] = cnt
         self.canvas.progress = self.progress
         if self.progress[0] == self.progress[1]:
@@ -828,24 +902,28 @@ class MainWindow(QMainWindow, WindowMixin):
         self.canvas.imgCnt = self.imgCnt
         self.loadFile(os.path.join(self.dirname, self.imglist[self.imgCnt]))
         self.img_id = self.imglist[self.imgCnt].split('.')[0].lstrip('0')
-        self.personNum = len(self.annot[self.img_id])
+        self.personNum = 1 #len(self.annot[self.img_id])
         self.canvas.person_id = self.person_id = 1
         self.labelDict = {}
-        self.person_bbox = self.annot[self.img_id][self.person_id - 1]['bbox']
+        self.person_bbox = [5,5,100,100] #self.annot[self.img_id][self.person_id - 1]['bbox']
 
         self.canvas.person_bbox = self.person_bbox
         
         for i in range(self.personNum):
             tmp = {}
-            tmp['Neck'] = False
-            tmp['Head'] = False
-            tmp['Empty'] = False
+
+            for cls_name in class_names:
+                tmp[cls_name] = False
+
             self.labelDict['person_'+str(i+1)] = tmp
 
-        if self.person_id > 1:
-            self.prev_person.setEnabled(True)
-        if self.person_id < self.personNum:
-            self.next_person.setEnabled(True)
+        self.prev_person.setEnabled(False)
+        self.next_person.setEnabled(False)
+
+        # if self.person_id > 1:
+        #     self.prev_person.setEnabled(True)
+        # if self.person_id < self.personNum:
+        #     self.next_person.setEnabled(True)
         self.next.setEnabled(False)
         self.setCreateMode()
         self.canvas.paint_info = True
@@ -853,33 +931,36 @@ class MainWindow(QMainWindow, WindowMixin):
         self.canvas.update()
 
     def nextFile(self):
-        self.saveFile()
+        out_fn = os.path.join(OUTPUT_DIR, "%s.json" % self.imglist[self.imgCnt].split('.')[0].lstrip('0'))
+        self.saveLabels(out_fn) #self.saveFile()
+        self.imgCnt += 1
         if self.imgCnt == len(self.imglist):
             return
         # update imgCnt
-        self.imgCnt += 1
+
         self.canvas.imgCnt = self.imgCnt
         # init img info
         self.img_id = self.imglist[self.imgCnt].split('.')[0].lstrip('0')
-        self.personNum = len(self.annot[self.img_id])
+        self.personNum = 1 #len(self.annot[self.img_id])
         self.canvas.person_id = self.person_id = 1
         self.labelDict = {}
-        self.person_bbox = self.annot[self.img_id][self.person_id-1]['bbox']
+        self.person_bbox = [5,5,10,10] #self.annot[self.img_id][self.person_id-1]['bbox']
         self.canvas.person_bbox = self.person_bbox
 
         for i in range(self.personNum):
             tmp = {}
-            tmp['Neck'] = False
-            tmp['Head'] = False
-            tmp['Empty'] = False
+
+            for cls_name in class_names:
+                tmp[cls_name] = False
+
             self.labelDict['person_' + str(i + 1)] = tmp
-        
-        self.prev_person.setEnabled(False)
-        self.next_person.setEnabled(False)
-        if self.person_id > 1:
-            self.prev_person.setEnabled(True)
-        if self.person_id < self.personNum:
-            self.next_person.setEnabled(True)
+
+        # self.prev_person.setEnabled(False)
+        # self.next_person.setEnabled(False)
+        # if self.person_id > 1:
+        #     self.prev_person.setEnabled(True)
+        # if self.person_id < self.personNum:
+        #     self.next_person.setEnabled(True)
         self.next.setEnabled(False)
 
         self.canvas.person_id =self.person_id
@@ -1092,8 +1173,8 @@ def main():
     parser.add_argument('-O', '--output', help='output label name')
     args = parser.parse_args()
 
-    filename = args.filename
-    output = args.output
+    filename = "/home/kan/Desktop/_5_final_step5.png" #args.filename
+    output = "." #args.output
 
     app = QApplication(sys.argv)
     app.setApplicationName(__appname__)
@@ -1102,3 +1183,6 @@ def main():
     win.show()
     win.raise_()
     sys.exit(app.exec_())
+
+if __name__ == '__main__':
+    main()
