@@ -43,6 +43,9 @@ CURSOR_DRAW    = Qt.CrossCursor
 CURSOR_MOVE    = Qt.ClosedHandCursor
 CURSOR_GRAB    = Qt.OpenHandCursor
 
+CONNECTED_PAIR_STR = [('chin', 'mouth'), ('nose', 'mouth'), ('l eye', 'nose'), ('r eye', 'nose')]
+CONNECTED_PAIR_CLR = []
+
 #class Canvas(QGLWidget):
 class Canvas(QWidget):
     zoomRequest = pyqtSignal(int)
@@ -429,12 +432,35 @@ class Canvas(QWidget):
             #p.end()
             
         Shape.scale = self.scale
+        print ('-------')
+        print (self.shapes)
+
         for shape in self.shapes:
             if (shape.selected or not self._hideBackround) and self.isVisible(shape):
                 shape.fill = shape.selected or shape == self.hShape
                 if shape.label and 'Empty' in shape.label:
                     continue
                 shape.paint(p)
+
+        # Drawing line between key-points
+        if len(self.shapes) > 1:
+            shapes_dct = {shape.label.replace('_1',''): shape for shape in self.shapes if shape.label is not None}
+
+            for pair in CONNECTED_PAIR_STR:
+                shape1 = shapes_dct.get(pair[0], None)
+                shape2 = shapes_dct.get(pair[1], None)
+
+                if shape1 is not None and shape2 is not None:
+                    x1, y1 = shape1.points[0].x(), shape1.points[0].y()
+                    x2, y2 = shape2.points[0].x(), shape2.points[0].y()
+
+                    p.drawLine(x1, y1, x2, y2)
+
+        ### ENDING
+
+        # print ('--debug')
+        # p.drawLine(5,5,100,100)
+
         if self.current:
             self.current.paint(p)
             self.line.paint(p)

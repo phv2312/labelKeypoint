@@ -24,7 +24,7 @@ import os.path
 import re
 import sys
 import subprocess
-from os import listdir
+from os import listdir, mkdir
 from os.path import isfile, join
 import json
 
@@ -43,7 +43,7 @@ except ImportError:
     from PyQt4.QtCore import *
     PYQT5 = False
 
-from labelme import resources
+#from labelme import resources
 from labelme.lib import struct, newAction, newIcon, addActions, fmtShortcut
 from labelme.shape import Shape, DEFAULT_LINE_COLOR, DEFAULT_FILL_COLOR
 from labelme.canvas import Canvas
@@ -76,7 +76,10 @@ __appname__ = 'labelme'
 ### Utility functions and classes.
 
 INPUT_DIR = '/home/kan/Desktop/samples'
-OUTPUT_DIR = "/home/kan/Desktop/samples/labels"
+OUTPUT_DIR = os.path.join(INPUT_DIR, 'labels') #"/home/kan/Desktop/samples/labels"
+
+if not os.path.exists(OUTPUT_DIR):
+    os.mkdir(OUTPUT_DIR)
 
 class WindowMixin(object):
     def menu(self, title, actions=None):
@@ -102,9 +105,10 @@ class MainWindow(QMainWindow, WindowMixin):
         super(MainWindow, self).__init__()
         self.setWindowTitle(__appname__)
         self.datadir = INPUT_DIR
-        with open(self.datadir+'/annot.json') as data_file:
-            self.annot = json.load(data_file)
-            print("number of label set: %d" % len(self.annot))
+        self.annot = {}
+        # with open(self.datadir+'/annot.json') as data_file:
+        #     self.annot = json.load(data_file)
+        #     print("number of label set: %d" % len(self.annot))
         # Whether we need to save or not.
         self.dirty = False
 
