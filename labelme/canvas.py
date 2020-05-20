@@ -81,6 +81,10 @@ class Canvas(QWidget):
         self._painter = QPainter()
         self._cursor = CURSOR_DEFAULT
         self.paint_info = False
+
+        self.recPoints = []
+        self.movingPoint = None
+
         # Menus:
         self.menus = (QMenu(), QMenu())
         # Set widget options.
@@ -131,6 +135,13 @@ class Canvas(QWidget):
         # Polygon drawing.
         if self.drawing():
             self.overrideCursor(CURSOR_DRAW)
+
+            if len(self.recPoints) == 1:
+                self.movingPoint = pos
+                print('Moving:', pos)
+
+                self.repaint()
+
             if self.current:
                 color = self.lineColor
                 if self.outOfPixmap(pos):
@@ -143,10 +154,14 @@ class Canvas(QWidget):
                     color = self.current.line_color
                     self.overrideCursor(CURSOR_POINT)
                     self.current.highlightVertex(0, Shape.NEAR_VERTEX)
+
                 self.line[1] = pos
                 self.line.line_color = color
                 self.repaint()
                 self.current.highlightClear()
+
+
+
             return
 
         # Polygon copy moving.
@@ -212,7 +227,31 @@ class Canvas(QWidget):
             pos = self.transformPos(ev.pos())
         else:
             pos = self.transformPos(ev.posF())
-        if ev.button() == Qt.LeftButton:
+
+        if ev.button() == Qt.RightButton:
+            if self.drawing():
+
+                # first click
+                if len(self.recPoints) == 0:
+                    self.recPoints.append(pos)
+                    print ('First click:', pos)
+                # second click
+                elif len(self.recPoints) == 1:
+                    self.recPoints.append(pos)
+                    print ('Second click:', pos)
+
+                    # update
+                    self.person_bbox = self.xyxy_to_xywh(self.recPoints[0], self.recPoints[1])
+
+                    # refresh
+                    self.recPoints = []
+                    self.movingPoint = None
+                else:
+                    pass
+
+                self.repaint()
+
+        if ev.button() == Qt.LeftButton: #Qt.LeftButton:
             if self.drawing():
                 if self.current:
                     try:
@@ -235,6 +274,9 @@ class Canvas(QWidget):
                     self.setHiding()
                     self.drawingPolygon.emit(True)
                     self.update()
+
+                    print("Mouse Press Event:", len(self.current.points))
+
                     if self.current.isClosed():
                         self.finalise()
             else:
@@ -246,15 +288,18 @@ class Canvas(QWidget):
             self.prevPoint = pos
             self.repaint()
 
+
+
     def mouseReleaseEvent(self, ev):
         if ev.button() == Qt.RightButton:
-            menu = self.menus[bool(self.selectedShapeCopy)]
-            self.restoreCursor()
-            if not menu.exec_(self.mapToGlobal(ev.pos()))\
-               and self.selectedShapeCopy:
-                # Cancel the move by deleting the shadow copy.
-                self.selectedShapeCopy = None
-                self.repaint()
+            pass
+            # menu = self.menus[bool(self.selectedShapeCopy)]
+            # self.restoreCursor()
+            # if not menu.exec_(self.mapToGlobal(ev.pos()))\
+            #    and self.selectedShapeCopy:
+            #     # Cancel the move by deleting the shadow copy.
+            #     self.selectedShapeCopy = None
+            #     self.repaint()
         elif ev.button() == Qt.LeftButton and self.selectedShape:
             self.overrideCursor(CURSOR_GRAB)
 
@@ -413,6 +458,36 @@ class Canvas(QWidget):
         painter.drawRect(
             self.person_bbox[0], self.person_bbox[1], self.person_bbox[2], self.person_bbox[3])
 
+    def xyxy_to_xywh(self, point1, point2):
+        x1, y1 = point1.x(), point1.y()
+        x2, y2 = point2.x(), point2.y()
+
+        x_min, y_min = min([x1, x2]), min([y1, y2])
+        x_max, y_max = max([x1, x2]), max([y1, y2])
+
+        return [x_min, y_min, x_max - x_min, y_max - y_min]
+
+    def tmp_paint_bbox(self, painter):
+        print ('Dig into tmp_paint_bbox')
+
+        pen = QPen(Qt.blue)
+        font = QFont()
+        font.setPointSize(20)
+        # Try using integer sizes for smoother drawing(?)
+        pen.setWidth(max(5, int(round(2.0 / self.scale))))
+        painter.setPen(pen)
+        painter.setFont(font)
+
+        if len(self.recPoints) == 1 and self.movingPoint is not None:
+            x1, y1 = self.recPoints[0].x(), self.recPoints[0].y()
+            x2, y2 = self.movingPoint.x(), self.movingPoint.y()
+
+            x_min, y_min = min([x1, x2]), min([y1, y2])
+            x_max, y_max = max([x1, x2]), max([y1, y2])
+
+            painter.drawRect(x_min, y_min, x_max - x_min, y_max - y_min)
+
+
     def paintEvent(self, event):
         if not self.pixmap:
             return super(Canvas, self).paintEvent(event)
@@ -429,7 +504,8 @@ class Canvas(QWidget):
         p.drawPixmap(0, 0, self.pixmap)
         if self.paint_info:
             self.paint_bbox(p)
-            #p.end()
+
+        self.tmp_paint_bbox(p)
             
         Shape.scale = self.scale
         print ('-------')

@@ -632,9 +632,10 @@ class MainWindow(QMainWindow, WindowMixin):
                         points=[(p.x(), p.y()) for p in s.points])
 
         shapes = [format_shape(shape) for shape in self.canvas.shapes]
+        bounding_box = {k:v for k,v in  zip(['x','y','w','h'], self.canvas.person_bbox)}
         try:
             lf.save(filename, shapes, str(self.filename), self.imageData,
-                self.lineColor.getRgb(), self.fillColor.getRgb())
+                self.lineColor.getRgb(), self.fillColor.getRgb(), bounding_box=bounding_box)
             self.labelFile = lf
             self.filename = filename
             return True
