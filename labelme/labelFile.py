@@ -59,10 +59,11 @@ class LabelFile(object):
             raise LabelFileError(e)
 
     def save(self, filename, shapes, imagePath, imageData,
-            lineColor=None, fillColor=None):
+            lineColor=None, fillColor=None, bounding_box=None):
         data = dict(
             shapes=shapes,
             imagePath=imagePath,
+            bounding_box=bounding_box
         )
         try:
             with open(filename, 'wb' if PY2 else 'w') as f:
