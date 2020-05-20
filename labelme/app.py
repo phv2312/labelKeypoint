@@ -75,7 +75,7 @@ __appname__ = 'labelme'
 
 ### Utility functions and classes.
 
-INPUT_DIR = '/home/kan/Desktop/samples'
+INPUT_DIR = '../../Data/AnimeDrawingsDataset/data'
 OUTPUT_DIR = os.path.join(INPUT_DIR, 'labels') #"/home/kan/Desktop/samples/labels"
 
 if not os.path.exists(OUTPUT_DIR):
@@ -676,6 +676,7 @@ class MainWindow(QMainWindow, WindowMixin):
         """
         text = self.choiceDialog.popUp()
         print (text)
+        print(self.labelDict['person_1'].keys())
 
         if text is not None and not self.labelDict['person_'+str(self.person_id)][text]: # unlabeled part
             new_label = text + '_' +str(self.person_id)
