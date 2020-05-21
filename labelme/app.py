@@ -76,6 +76,8 @@ __appname__ = 'labelme'
 ### Utility functions and classes.
 
 INPUT_DIR = '../../Data/AnimeDrawingsDataset/data'
+# INPUT_DIR = '/home/kan/Desktop/Cinnamon/pose/labelKeypoint/scripts/processed_hor01/1'
+
 OUTPUT_DIR = os.path.join(INPUT_DIR, 'labels') #"/home/kan/Desktop/samples/labels"
 
 if not os.path.exists(OUTPUT_DIR):
@@ -184,7 +186,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.next = next
         self.next_person = next_person
         self.prev_person = prev_person
-        next.setEnabled(False)
+        next.setEnabled(True)
         next_person.setEnabled(False)
         prev_person.setEnabled(False)
 
@@ -473,7 +475,7 @@ class MainWindow(QMainWindow, WindowMixin):
         #     self.prev_person.setEnabled(True)
         # if self.person_id < self.personNum:
         #     self.next_person.setEnabled(True)
-        self.next.setEnabled(False)
+        self.next.setEnabled(True)
 
         self.canvas.person_id = self.person_id
         self.loadFile(os.path.join(self.dirname, self.imglist[self.imgCnt]))
@@ -930,7 +932,7 @@ class MainWindow(QMainWindow, WindowMixin):
         #     self.prev_person.setEnabled(True)
         # if self.person_id < self.personNum:
         #     self.next_person.setEnabled(True)
-        self.next.setEnabled(False)
+        self.next.setEnabled(True)
         self.setCreateMode()
         self.canvas.paint_info = True
         self.canvas.progress = self.progress = [0, self.personNum]
@@ -967,7 +969,7 @@ class MainWindow(QMainWindow, WindowMixin):
         #     self.prev_person.setEnabled(True)
         # if self.person_id < self.personNum:
         #     self.next_person.setEnabled(True)
-        self.next.setEnabled(False)
+        self.next.setEnabled(True)
 
         self.canvas.person_id =self.person_id
         self.loadFile(os.path.join(self.dirname, self.imglist[self.imgCnt]))
