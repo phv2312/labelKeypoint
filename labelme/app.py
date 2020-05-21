@@ -75,7 +75,7 @@ __appname__ = 'labelme'
 
 ### Utility functions and classes.
 
-INPUT_DIR = '../../Data/AnimeDrawingsDataset/data'
+INPUT_DIR = '../data/processed_hor01/2'
 # INPUT_DIR = '/home/kan/Desktop/Cinnamon/pose/labelKeypoint/scripts/processed_hor01/1'
 
 OUTPUT_DIR = os.path.join(INPUT_DIR, 'labels') #"/home/kan/Desktop/samples/labels"
