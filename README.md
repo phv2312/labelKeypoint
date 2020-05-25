@@ -75,3 +75,8 @@ These're some main buttons:
 > 'Left Mouse Click': click & choose the corresponding key-point.
 
 > 'Double click in the Widget': Remove key-point
+
+TODO
+-----
+1. Adding attributes `is_visible` for point being occluded, need to interpolate ...  
+
