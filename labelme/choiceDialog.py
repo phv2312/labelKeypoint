@@ -51,7 +51,7 @@ class ChoiceDialog(QDialog):
                                  BB.Cancel | BB.Reset | BB.Save | BB.Yes | BB.Ignore | BB.Help | BB.RestoreDefaults |
                                  BB.No | BB.NoToAll | BB.Open, Qt.Vertical, self)
 
-        self.buttonBox = bb = BB(BB.Abort | BB.Yes | BB.No | BB.NoToAll | BB.Ok , self)
+        #self.buttonBox = bb = BB(BB.Abort | BB.Yes | BB.No | BB.NoToAll | BB.Ok , self)
 
         #
         # -------------------------------------------------
@@ -62,17 +62,17 @@ class ChoiceDialog(QDialog):
         bb.button(BB.NoToAll).setText(class_names[2])
         bb.button(BB.Ok).setText(class_names[3])
         bb.button(BB.Abort).setText(class_names[4])
-        # bb.button(BB.Cancel).setText(class_names[5])
-        # bb.button(BB.Save).setText(class_names[6])
-        # bb.button(BB.SaveAll).setText(class_names[7])
-        # bb.button(BB.Open).setText(class_names[8])
-        # bb.button(BB.Retry).setText(class_names[9])
-        # bb.button(BB.Ignore).setText(class_names[10])
-        # bb.button(BB.Discard).setText(class_names[11])
-        # bb.button(BB.Apply).setText(class_names[12])
-        # bb.button(BB.Reset).setText(class_names[13])
-        # bb.button(BB.RestoreDefaults).setText(class_names[14])
-        # bb.button(BB.Help).setText(class_names[15])
+        bb.button(BB.Cancel).setText(class_names[5])
+        bb.button(BB.Save).setText(class_names[6])
+        bb.button(BB.SaveAll).setText(class_names[7])
+        bb.button(BB.Open).setText(class_names[8])
+        bb.button(BB.Retry).setText(class_names[9])
+        bb.button(BB.Ignore).setText(class_names[10])
+        bb.button(BB.Discard).setText(class_names[11])
+        bb.button(BB.Apply).setText(class_names[12])
+        bb.button(BB.Reset).setText(class_names[13])
+        bb.button(BB.RestoreDefaults).setText(class_names[14])
+        bb.button(BB.Help).setText(class_names[15])
 
         #
         # -------------------------------------------------
@@ -83,17 +83,17 @@ class ChoiceDialog(QDialog):
         bb.button(BB.NoToAll).clicked.connect(self.p3)
         bb.button(BB.Ok).clicked.connect(self.p4)
         bb.button(BB.Abort).clicked.connect(self.p5)
-        # bb.button(BB.Cancel).clicked.connect(self.p6)
-        # bb.button(BB.Save).clicked.connect(self.p7)
-        # bb.button(BB.SaveAll).clicked.connect(self.p8)
-        # bb.button(BB.Open).clicked.connect(self.p9)
-        # bb.button(BB.Retry).clicked.connect(self.p10)
-        # bb.button(BB.Ignore).clicked.connect(self.p11)
-        # bb.button(BB.Discard).clicked.connect(self.p12)
-        # bb.button(BB.Apply).clicked.connect(self.p13)
-        # bb.button(BB.Reset).clicked.connect(self.p14)
-        # bb.button(BB.RestoreDefaults).clicked.connect(self.p15)
-        # bb.button(BB.Help).clicked.connect(self.p16)
+        bb.button(BB.Cancel).clicked.connect(self.p6)
+        bb.button(BB.Save).clicked.connect(self.p7)
+        bb.button(BB.SaveAll).clicked.connect(self.p8)
+        bb.button(BB.Open).clicked.connect(self.p9)
+        bb.button(BB.Retry).clicked.connect(self.p10)
+        bb.button(BB.Ignore).clicked.connect(self.p11)
+        bb.button(BB.Discard).clicked.connect(self.p12)
+        bb.button(BB.Apply).clicked.connect(self.p13)
+        bb.button(BB.Reset).clicked.connect(self.p14)
+        bb.button(BB.RestoreDefaults).clicked.connect(self.p15)
+        bb.button(BB.Help).clicked.connect(self.p16)
 
         bb.accepted.connect(self.validate)
         bb.rejected.connect(self.reject)
@@ -162,6 +162,14 @@ class ChoiceDialog(QDialog):
 
     def p16(self):
         self.edit.setText(class_names[15])
+        self.accept()
+
+    def p17(self):
+        self.edit.setText(class_names[16])
+        self.accept()
+
+    def p18(self):
+        self.edit.setText(class_names[17])
         self.accept()
 
     def validate(self):
