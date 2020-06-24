@@ -75,9 +75,7 @@ __appname__ = 'labelme'
 
 ### Utility functions and classes.
 
-INPUT_DIR = '../data/processed_hor01/2'
-# INPUT_DIR = '/home/kan/Desktop/Cinnamon/pose/labelKeypoint/scripts/processed_hor01/1'
-
+INPUT_DIR = '/home/kan/Desktop/Cinnamon/pose/labelKeypoint/scripts/processed_hor01/32'
 OUTPUT_DIR = os.path.join(INPUT_DIR, 'labels') #"/home/kan/Desktop/samples/labels"
 
 if not os.path.exists(OUTPUT_DIR):
