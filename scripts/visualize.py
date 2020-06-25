@@ -3,37 +3,40 @@ import json
 import os
 
 import matplotlib.pyplot as plt
-PATH_DATA = "../../data/processed_hor01"
+PATH_DATA = "../../split_data/"
 def imgshow(im):
     plt.imshow(im)
     plt.show()
 
 def save_visualize_single(json_data, cv2_image, vis_folder, img_name):
-    kps = json_data['shapes']
-    bbox = json_data['bounding_box']
+    if 'shapes' in json_data:
+        kps = json_data['shapes']
 
-    # draw bounding boxes
-    x, y, w, h = bbox['x'], bbox['y'], bbox['w'], bbox['h']
-    x = int(x)
-    y = int(y)
-    w = int(w)
-    h = int(h)
+        if 'bounding_box' in json_data:
+            bbox = json_data['bounding_box']
+            if bbox != "empty":
+                # draw bounding boxes
+                x, y, w, h = bbox['x'], bbox['y'], bbox['w'], bbox['h']
+                x = int(x)
+                y = int(y)
+                w = int(w)
+                h = int(h)
 
-    cv2.rectangle(cv2_image, (x,y), (x + w, y + h), (255,0,0), 5)
+                cv2.rectangle(cv2_image, (x,y), (x + w, y + h), (255,0,0), 5)
 
-    # draw key points
-    for kp_dct in kps:
-        point = kp_dct['points']
-        label = kp_dct['label']
+        # draw key points
+        for kp_dct in kps:
+            point = kp_dct['points']
+            label = kp_dct['label']
 
-        x, y = point[0]
-        x = int(x)
-        y = int(y)
+            x, y = point[0]
+            x = int(x)
+            y = int(y)
 
-        cv2.circle(cv2_image, (x, y), 10, (0,255,0), thickness=5)
-        cv2.putText(cv2_image, label, (x, y - 10), cv2.FONT_HERSHEY_COMPLEX, 0.5, (255,0,0), thickness=1)
+            cv2.circle(cv2_image, (x, y), 5, (0,255,0), thickness=2)
+            cv2.putText(cv2_image, label, (x, y - 10), cv2.FONT_HERSHEY_COMPLEX, 0.5, (255,0,0), thickness=1)
 
-    # imgshow(cv2.cvtColor(cv2_image, cv2.COLOR_RGB2BGR))
+        # imgshow(cv2.cvtColor(cv2_image, cv2.COLOR_RGB2BGR))
     vis_file = os.path.join(vis_folder, image_name)
     cv2.imwrite(vis_file, cv2_image)
 
@@ -43,7 +46,7 @@ def check_valid_folder(folder_name):
     '''
     image_folder = os.path.join(folder_name, "images")
 
-    label_folder = os.path.join(folder_name, "labels")
+    label_folder = os.path.join(folder_name, "labels_v1")
 
 
     results = True
@@ -62,8 +65,8 @@ if __name__ == '__main__':
         if check_valid_folder(processed_folder):
             print("On visualizing folder id", id_folder)
             image_folder = os.path.join(processed_folder, "images")
-            label_folder = os.path.join(processed_folder, "labels")
-            vis_folder = os.path.join(processed_folder, "vis_resutls")
+            label_folder = os.path.join(processed_folder, "labels_v1")
+            vis_folder = os.path.join(processed_folder, "vis_resutls_v1")
             if os.path.isdir(vis_folder) is False:
                 os.makedirs(vis_folder)
 
