@@ -75,11 +75,8 @@ __appname__ = 'labelme'
 
 ### Utility functions and classes.
 
-INPUT_DIR = '../data/processed_hor01/2'
-# INPUT_DIR = '/home/kan/Desktop/Cinnamon/pose/labelKeypoint/scripts/processed_hor01/1'
-
-OUTPUT_DIR = os.path.join(INPUT_DIR, 'labels') #"/home/kan/Desktop/samples/labels"
-
+INPUT_DIR = '/home/kan/Desktop/split_data/split_data/7'
+OUTPUT_DIR = os.path.join(INPUT_DIR, 'labels_v1')
 if not os.path.exists(OUTPUT_DIR):
     os.mkdir(OUTPUT_DIR)
 
@@ -485,6 +482,8 @@ class MainWindow(QMainWindow, WindowMixin):
         self.progress = [0, self.personNum]
         self.canvas.update()
 
+        self.loadExistingLabel()
+
     def resetState(self):
         self.itemsToShapes = []
         self.labelList.clear()
@@ -679,7 +678,7 @@ class MainWindow(QMainWindow, WindowMixin):
         """
         text = self.choiceDialog.popUp()
         print (text)
-        print(self.labelDict['person_1'].keys())
+        print (self.labelDict['person_1'].keys())
 
         if text is not None and not self.labelDict['person_'+str(self.person_id)][text]: # unlabeled part
             new_label = text + '_' +str(self.person_id)
@@ -885,6 +884,32 @@ class MainWindow(QMainWindow, WindowMixin):
         if self.mayContinue():
             self.loadFile(filename)
 
+    def loadExistingLabel(self):
+        #
+        file_name = self.imglist[self.imgCnt]
+        base_name = os.path.splitext(os.path.basename(file_name))[0]
+
+        #
+        label_path = os.path.join(OUTPUT_DIR, "%s.json" % base_name)
+        if not os.path.exists(label_path): return
+
+        #
+        json_data = json.load(open(label_path, 'r'))
+
+        _shapes = []
+        for shape_dct in json_data.get('shapes', []):
+            x,y = shape_dct['points'][0]
+            lbl = shape_dct['label']#.split('_')[0]
+
+            _shape = Shape(label=lbl)
+            _shape.addPoint(QPointF(x,y))
+            _shape.close()
+
+            self.addLabel(_shape, lbl.split('_')[0])
+            _shapes += [_shape]
+
+        self.canvas.loadShapes(_shapes)
+
     def openFile(self, _value=False):
         #if not self.mayContinue():
         #    return
@@ -901,12 +926,8 @@ class MainWindow(QMainWindow, WindowMixin):
         #filename = str(filename)
         self.dirname = self.datadir + '/images'
         self.imglist = [ f for f in listdir(self.dirname) if isfile(join(self.dirname,f))]
-        
-        if os.path.exists(os.path.join(self.dirname, 'annotations', 'current.txt')):
-            with open(os.path.join(self.dirname, 'annotations', 'current.txt'), 'r') as cnt_file:
-                self.imgCnt = int(cnt_file.readline())
-        else:
-            self.imgCnt = 0
+
+        self.imgCnt = 0
         self.canvas.imgCnt = self.imgCnt
         self.loadFile(os.path.join(self.dirname, self.imglist[self.imgCnt]))
         self.img_id = self.imglist[self.imgCnt].split('.')[0].lstrip('0')
@@ -937,6 +958,9 @@ class MainWindow(QMainWindow, WindowMixin):
         self.canvas.paint_info = True
         self.canvas.progress = self.progress = [0, self.personNum]
         self.canvas.update()
+
+        #if label already exist, load it
+        self.loadExistingLabel()
 
     def nextFile(self):
         out_fn = os.path.join(OUTPUT_DIR, "%s.json" % self.imglist[self.imgCnt].split('.')[0].lstrip('0'))
@@ -978,7 +1002,9 @@ class MainWindow(QMainWindow, WindowMixin):
         self.canvas.paint_info = True
         self.progress = [0, self.personNum]
         self.canvas.update()
-    
+
+        self.loadExistingLabel()
+
     def nextPerson(self):
         self.person_id += 1
         self.person_bbox = self.annot[self.img_id][self.person_id - 1]['bbox']
