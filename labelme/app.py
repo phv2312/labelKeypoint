@@ -934,7 +934,7 @@ class MainWindow(QMainWindow, WindowMixin):
         _shapes = []
         for shape_dct in json_data.get('shapes', []):
             x,y = shape_dct['points'][0]
-            lbl = shape_dct['label']#.split('_')[0]
+            lbl = shape_dct['label'].replace(' ','')
 
             _shape = Shape(label=lbl)
             _shape.addPoint(QPointF(x,y))
@@ -946,19 +946,20 @@ class MainWindow(QMainWindow, WindowMixin):
         self.canvas.loadShapes(_shapes)
 
     def openFile(self, _value=False):
-        #if not self.mayContinue():
-        #    return
-        #path = os.path.dirname(str(self.filename))\
-        #        if self.filename else '.'
-        #formats = ['*.{}'.format(fmt.data().decode())
-        #           for fmt in QImageReader.supportedImageFormats()]
-        #filters = "Image & Label files (%s)" % \
-        #        ' '.join(formats + ['*%s' % LabelFile.suffix])
-        #filename = QFileDialog.getOpenFileName(self,
-        #    '%s - Choose Image or Label file' % __appname__, path, filters)
-        #if PYQT5:
-        #    filename, _ = filename
-        #filename = str(filename)
+        global INPUT_DIR, OUTPUT_DIR
+
+        datadir = QFileDialog.getExistingDirectory(self, 'Select a directory', '.')
+        if os.path.isdir(datadir):
+            print ('successfully get dir_name:', datadir)
+        else:
+            print ('fail to get dirname:', datadir)
+            return
+
+        #
+        INPUT_DIR = datadir
+        OUTPUT_DIR = os.path.join(datadir, 'labels_v1')
+
+        self.datadir = datadir
         self.dirname = self.datadir + '/images'
         self.imglist = [ f for f in listdir(self.dirname) if isfile(join(self.dirname,f))]
 
@@ -1004,50 +1005,7 @@ class MainWindow(QMainWindow, WindowMixin):
 
         #
         self.prevFileWithoutSave()
-
         return
-
-        #
-        # if self.imgCnt - 1 < 0:
-        #     print ('current imgCnt %d reach maximum %d ...' % (self.imgCnt, len(self.imglist)))
-        #     return
-        #
-        # # update imgCnt
-        # self.imgCnt -= 1
-        # self.canvas.imgCnt = self.imgCnt
-        # # init img info
-        # self.img_id = self.imglist[self.imgCnt].split('.')[0].lstrip('0')
-        # self.personNum = 1 #len(self.annot[self.img_id])
-        # self.canvas.person_id = self.person_id = 1
-        # self.labelDict = {}
-        # self.person_bbox = [1,1,2,2] #self.annot[self.img_id][self.person_id-1]['bbox']
-        # self.canvas.person_bbox = self.person_bbox
-        #
-        # for i in range(self.personNum):
-        #     tmp = {}
-        #
-        #     for cls_name in class_names:
-        #         tmp[cls_name] = False
-        #
-        #     self.labelDict['person_' + str(i + 1)] = tmp
-        #
-        # # self.prev_person.setEnabled(False)
-        # # self.next_person.setEnabled(False)
-        # # if self.person_id > 1:
-        # #     self.prev_person.setEnabled(True)
-        # # if self.person_id < self.personNum:
-        # #     self.next_person.setEnabled(True)
-        # self.next.setEnabled(True)
-        #
-        # self.canvas.person_id =self.person_id
-        # self.loadFile(os.path.join(self.dirname, self.imglist[self.imgCnt]))
-        # self.setCreateMode()
-        #
-        # self.canvas.paint_info = True
-        # self.progress = [0, self.personNum]
-        # self.canvas.update()
-        #
-        # self.loadExistingLabel()
 
     def nextFile(self):
         out_fn = os.path.join(OUTPUT_DIR, "%s.json" % self.imglist[self.imgCnt].split('.')[0].lstrip('0'))
@@ -1055,47 +1013,6 @@ class MainWindow(QMainWindow, WindowMixin):
 
         self.nextFileWithoutSave()
         return
-        #
-        # if self.imgCnt + 1 >= len(self.imglist):
-        #     print ('current imgCnt %d reach maximum %d ...' % (self.imgCnt, len(self.imglist)))
-        #     return
-        #
-        # # update imgCnt
-        # self.imgCnt += 1
-        # self.canvas.imgCnt = self.imgCnt
-        # # init img info
-        # self.img_id = self.imglist[self.imgCnt].split('.')[0].lstrip('0')
-        # self.personNum = 1 #len(self.annot[self.img_id])
-        # self.canvas.person_id = self.person_id = 1
-        # self.labelDict = {}
-        # self.person_bbox = [1,1,2,2] #self.annot[self.img_id][self.person_id-1]['bbox']
-        # self.canvas.person_bbox = self.person_bbox
-        #
-        # for i in range(self.personNum):
-        #     tmp = {}
-        #
-        #     for cls_name in class_names:
-        #         tmp[cls_name] = False
-        #
-        #     self.labelDict['person_' + str(i + 1)] = tmp
-        #
-        # # self.prev_person.setEnabled(False)
-        # # self.next_person.setEnabled(False)
-        # # if self.person_id > 1:
-        # #     self.prev_person.setEnabled(True)
-        # # if self.person_id < self.personNum:
-        # #     self.next_person.setEnabled(True)
-        # self.next.setEnabled(True)
-        #
-        # self.canvas.person_id =self.person_id
-        # self.loadFile(os.path.join(self.dirname, self.imglist[self.imgCnt]))
-        # self.setCreateMode()
-        #
-        # self.canvas.paint_info = True
-        # self.progress = [0, self.personNum]
-        # self.canvas.update()
-        #
-        # self.loadExistingLabel()
 
     def nextPerson(self):
         self.person_id += 1

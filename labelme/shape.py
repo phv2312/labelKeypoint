@@ -115,7 +115,7 @@ class Shape(object):
             color = self.select_line_color if self.selected else self.line_color
             pen = QPen(color)
             font = QFont()
-            font.setPointSize(20)
+            font.setPointSize(15)
             # Try using integer sizes for smoother drawing(?)
             pen.setWidth(max(5, int(round(2.0 / self.scale))))
             painter.setPen(pen)

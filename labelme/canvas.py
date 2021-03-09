@@ -512,16 +512,9 @@ class Canvas(QWidget):
         print ('-------')
         print (self.shapes)
 
-        for shape in self.shapes:
-            if (shape.selected or not self._hideBackround) and self.isVisible(shape):
-                shape.fill = shape.selected or shape == self.hShape
-                if shape.label and 'Empty' in shape.label:
-                    continue
-                shape.paint(p)
-
         # Drawing line between key-points
         if len(self.shapes) > 1:
-            shapes_dct = {shape.label.replace('_1',''): shape for shape in self.shapes if shape.label is not None}
+            shapes_dct = {shape.label.replace('_1', ''): shape for shape in self.shapes if shape.label is not None}
 
             for pair in CONNECTED_PAIR_STR:
                 shape1 = shapes_dct.get(pair[0], None)
@@ -532,6 +525,13 @@ class Canvas(QWidget):
                     x2, y2 = shape2.points[0].x(), shape2.points[0].y()
 
                     p.drawLine(x1, y1, x2, y2)
+
+        for shape in self.shapes:
+            if (shape.selected or not self._hideBackround) and self.isVisible(shape):
+                shape.fill = shape.selected or shape == self.hShape
+                if shape.label and 'Empty' in shape.label:
+                    continue
+                shape.paint(p)
 
         ### ENDING
         if self.current:
