@@ -75,7 +75,8 @@ __appname__ = 'labelme'
 
 ### Utility functions and classes.
 
-INPUT_DIR = '/home/kan/Desktop/split_data/split_data/7'
+#TODO: this
+INPUT_DIR = '/home/kan/Desktop/stuff/naruto/01'
 OUTPUT_DIR = os.path.join(INPUT_DIR, 'labels_v1')
 if not os.path.exists(OUTPUT_DIR):
     os.mkdir(OUTPUT_DIR)
@@ -122,6 +123,10 @@ class MainWindow(QMainWindow, WindowMixin):
         self.labelList = QListWidget()
         self.itemsToShapes = []
 
+
+        """
+        -- Polygon Labels area
+        """
         self.labelList.itemActivated.connect(self.labelSelectionChanged)
         #self.labelList.itemSelectionChanged.connect(self.labelSelectionChanged)
         self.labelList.itemDoubleClicked.connect(self.editLabel)
@@ -135,12 +140,13 @@ class MainWindow(QMainWindow, WindowMixin):
         self.editButton.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         self.labelListContainer = QWidget()
         self.labelListContainer.setLayout(listLayout)
-        listLayout.addWidget(self.editButton)#, 0, Qt.AlignCenter)
+        #listLayout.addWidget(self.editButton)#, 0, Qt.AlignCenter)
         listLayout.addWidget(self.labelList)
 
         self.dock = QDockWidget('Polygon Labels', self)
         self.dock.setObjectName('Labels')
         self.dock.setWidget(self.labelListContainer)
+        #### -- end here
 
         self.zoomWidget = ZoomWidget()
         self.colorDialog = ColorDialog(parent=self)
@@ -201,15 +207,12 @@ class MainWindow(QMainWindow, WindowMixin):
         color2 = action('Polygon &Fill Color', self.chooseColor2,
                 'Ctrl+Shift+L', 'color', 'Choose polygon fill color')
 
-        createMode = action('Create\nPolygo&ns', self.setCreateMode,
-                'Ctrl+N', 'new', 'Start drawing polygons', enabled=False)
-        editMode = action('&Edit\nPolygons', self.setEditMode,
-                'Ctrl+J', 'edit', 'Move and edit polygons', enabled=False)
+        createMode = action('&Next\nw/o Save', self.nextFileWithoutSave, enabled=True)
+        editMode = action('&Prev\nw/o Save', self.prevFileWithoutSave, enabled=True)
 
         create = action('Create\nPolygo&n', self.createShape,
                 'Ctrl+N', 'new', 'Draw a new polygon', enabled=False)
-        delete = action('Next\nWithout Save', self.nextFileWithoutSave, enabled=True)
-        #delete.setEnabled(True)
+        delete = action('&Prev', self.prevFile, enabled=True)
         copy = action('&Duplicate\nPolygon', self.copySelectedShape,
                 'Ctrl+D', 'copy', 'Create a duplicate of the selected polygon',
                 enabled=False)
@@ -443,11 +446,11 @@ class MainWindow(QMainWindow, WindowMixin):
     def status(self, message, delay=5000):
         self.statusBar().showMessage(message, delay)
 
-    def nextFileWithoutSave(self):
-        self.imgCnt += 1
-        if self.imgCnt == len(self.imglist):
+    def prevFileWithoutSave(self):
+        if self.imgCnt - 1 < 0:
+            print('current imgCnt %d reach minimum %d ...' % (self.imgCnt, 0))
             return
-        # update imgCnt
+        self.imgCnt -= 1
 
         self.canvas.imgCnt = self.imgCnt
         # init img info
@@ -455,7 +458,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.personNum = 1  # len(self.annot[self.img_id])
         self.canvas.person_id = self.person_id = 1
         self.labelDict = {}
-        self.person_bbox = [5, 5, 10, 10]  # self.annot[self.img_id][self.person_id-1]['bbox']
+        self.person_bbox = [1, 1, 2, 2]  # self.annot[self.img_id][self.person_id-1]['bbox']
         self.canvas.person_bbox = self.person_bbox
 
         for i in range(self.personNum):
@@ -466,12 +469,43 @@ class MainWindow(QMainWindow, WindowMixin):
 
             self.labelDict['person_' + str(i + 1)] = tmp
 
-        # self.prev_person.setEnabled(False)
-        # self.next_person.setEnabled(False)
-        # if self.person_id > 1:
-        #     self.prev_person.setEnabled(True)
-        # if self.person_id < self.personNum:
-        #     self.next_person.setEnabled(True)
+        self.next.setEnabled(True)
+
+        self.canvas.person_id = self.person_id
+        self.loadFile(os.path.join(self.dirname, self.imglist[self.imgCnt]))
+        self.setCreateMode()
+
+        self.canvas.paint_info = True
+        self.progress = [0, self.personNum]
+        self.canvas.update()
+
+        self.loadExistingLabel()
+
+    def nextFileWithoutSave(self):
+
+        if self.imgCnt + 1 >= len(self.imglist):
+            print ('current imgCnt %d reach maximum %d ...' % (self.imgCnt, len(self.imglist)))
+            return
+        # update imgCnt
+        self.imgCnt += 1
+
+        self.canvas.imgCnt = self.imgCnt
+        # init img info
+        self.img_id = self.imglist[self.imgCnt].split('.')[0].lstrip('0')
+        self.personNum = 1  # len(self.annot[self.img_id])
+        self.canvas.person_id = self.person_id = 1
+        self.labelDict = {}
+        self.person_bbox = [1, 1, 2, 2]  # self.annot[self.img_id][self.person_id-1]['bbox']
+        self.canvas.person_bbox = self.person_bbox
+
+        for i in range(self.personNum):
+            tmp = {}
+
+            for cls_name in class_names:
+                tmp[cls_name] = False
+
+            self.labelDict['person_' + str(i + 1)] = tmp
+
         self.next.setEnabled(True)
 
         self.canvas.person_id = self.person_id
@@ -518,11 +552,11 @@ class MainWindow(QMainWindow, WindowMixin):
     def createShape(self):
         assert self.beginner()
         self.canvas.setEditing(False)
-        self.actions.create.setEnabled(False)
+        #self.actions.create.setEnabled(False)
 
     def toggleDrawingSensitive(self, drawing=True):
         """In the middle of drawing, toggling between modes should be disabled."""
-        self.actions.editMode.setEnabled(not drawing)
+        self.actions.editMode.setEnabled(True)
         if not drawing and self.beginner():
             # Cancel creation.
             self.canvas.setEditing(True)
@@ -531,8 +565,8 @@ class MainWindow(QMainWindow, WindowMixin):
 
     def toggleDrawMode(self, edit=True):
         self.canvas.setEditing(edit)
-        self.actions.createMode.setEnabled(edit)
-        self.actions.editMode.setEnabled(not edit)
+        self.actions.createMode.setEnabled(True)
+        self.actions.editMode.setEnabled(True)
 
     def setCreateMode(self):
         assert self.advanced()
@@ -585,6 +619,7 @@ class MainWindow(QMainWindow, WindowMixin):
                 item.setSelected(True)
             else:
                 self.labelList.clearSelection()
+        selected = True
         self.actions.delete.setEnabled(selected)
         self.actions.copy.setEnabled(selected)
         self.actions.edit.setEnabled(selected)
@@ -934,7 +969,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.personNum = 1 #len(self.annot[self.img_id])
         self.canvas.person_id = self.person_id = 1
         self.labelDict = {}
-        self.person_bbox = [5,5,100,100] #self.annot[self.img_id][self.person_id - 1]['bbox']
+        self.person_bbox = [1,1,2,2] #self.annot[self.img_id][self.person_id - 1]['bbox']
 
         self.canvas.person_bbox = self.person_bbox
         
@@ -962,48 +997,105 @@ class MainWindow(QMainWindow, WindowMixin):
         #if label already exist, load it
         self.loadExistingLabel()
 
+    def prevFile(self):
+        #
+        out_fn = os.path.join(OUTPUT_DIR, "%s.json" % self.imglist[self.imgCnt].split('.')[0].lstrip('0'))
+        self.saveLabels(out_fn) #self.saveFile()
+
+        #
+        self.prevFileWithoutSave()
+
+        return
+
+        #
+        # if self.imgCnt - 1 < 0:
+        #     print ('current imgCnt %d reach maximum %d ...' % (self.imgCnt, len(self.imglist)))
+        #     return
+        #
+        # # update imgCnt
+        # self.imgCnt -= 1
+        # self.canvas.imgCnt = self.imgCnt
+        # # init img info
+        # self.img_id = self.imglist[self.imgCnt].split('.')[0].lstrip('0')
+        # self.personNum = 1 #len(self.annot[self.img_id])
+        # self.canvas.person_id = self.person_id = 1
+        # self.labelDict = {}
+        # self.person_bbox = [1,1,2,2] #self.annot[self.img_id][self.person_id-1]['bbox']
+        # self.canvas.person_bbox = self.person_bbox
+        #
+        # for i in range(self.personNum):
+        #     tmp = {}
+        #
+        #     for cls_name in class_names:
+        #         tmp[cls_name] = False
+        #
+        #     self.labelDict['person_' + str(i + 1)] = tmp
+        #
+        # # self.prev_person.setEnabled(False)
+        # # self.next_person.setEnabled(False)
+        # # if self.person_id > 1:
+        # #     self.prev_person.setEnabled(True)
+        # # if self.person_id < self.personNum:
+        # #     self.next_person.setEnabled(True)
+        # self.next.setEnabled(True)
+        #
+        # self.canvas.person_id =self.person_id
+        # self.loadFile(os.path.join(self.dirname, self.imglist[self.imgCnt]))
+        # self.setCreateMode()
+        #
+        # self.canvas.paint_info = True
+        # self.progress = [0, self.personNum]
+        # self.canvas.update()
+        #
+        # self.loadExistingLabel()
+
     def nextFile(self):
         out_fn = os.path.join(OUTPUT_DIR, "%s.json" % self.imglist[self.imgCnt].split('.')[0].lstrip('0'))
         self.saveLabels(out_fn) #self.saveFile()
-        self.imgCnt += 1
-        if self.imgCnt == len(self.imglist):
-            return
-        # update imgCnt
 
-        self.canvas.imgCnt = self.imgCnt
-        # init img info
-        self.img_id = self.imglist[self.imgCnt].split('.')[0].lstrip('0')
-        self.personNum = 1 #len(self.annot[self.img_id])
-        self.canvas.person_id = self.person_id = 1
-        self.labelDict = {}
-        self.person_bbox = [5,5,10,10] #self.annot[self.img_id][self.person_id-1]['bbox']
-        self.canvas.person_bbox = self.person_bbox
-
-        for i in range(self.personNum):
-            tmp = {}
-
-            for cls_name in class_names:
-                tmp[cls_name] = False
-
-            self.labelDict['person_' + str(i + 1)] = tmp
-
-        # self.prev_person.setEnabled(False)
-        # self.next_person.setEnabled(False)
-        # if self.person_id > 1:
-        #     self.prev_person.setEnabled(True)
-        # if self.person_id < self.personNum:
-        #     self.next_person.setEnabled(True)
-        self.next.setEnabled(True)
-
-        self.canvas.person_id =self.person_id
-        self.loadFile(os.path.join(self.dirname, self.imglist[self.imgCnt]))
-        self.setCreateMode()
-
-        self.canvas.paint_info = True
-        self.progress = [0, self.personNum]
-        self.canvas.update()
-
-        self.loadExistingLabel()
+        self.nextFileWithoutSave()
+        return
+        #
+        # if self.imgCnt + 1 >= len(self.imglist):
+        #     print ('current imgCnt %d reach maximum %d ...' % (self.imgCnt, len(self.imglist)))
+        #     return
+        #
+        # # update imgCnt
+        # self.imgCnt += 1
+        # self.canvas.imgCnt = self.imgCnt
+        # # init img info
+        # self.img_id = self.imglist[self.imgCnt].split('.')[0].lstrip('0')
+        # self.personNum = 1 #len(self.annot[self.img_id])
+        # self.canvas.person_id = self.person_id = 1
+        # self.labelDict = {}
+        # self.person_bbox = [1,1,2,2] #self.annot[self.img_id][self.person_id-1]['bbox']
+        # self.canvas.person_bbox = self.person_bbox
+        #
+        # for i in range(self.personNum):
+        #     tmp = {}
+        #
+        #     for cls_name in class_names:
+        #         tmp[cls_name] = False
+        #
+        #     self.labelDict['person_' + str(i + 1)] = tmp
+        #
+        # # self.prev_person.setEnabled(False)
+        # # self.next_person.setEnabled(False)
+        # # if self.person_id > 1:
+        # #     self.prev_person.setEnabled(True)
+        # # if self.person_id < self.personNum:
+        # #     self.next_person.setEnabled(True)
+        # self.next.setEnabled(True)
+        #
+        # self.canvas.person_id =self.person_id
+        # self.loadFile(os.path.join(self.dirname, self.imglist[self.imgCnt]))
+        # self.setCreateMode()
+        #
+        # self.canvas.paint_info = True
+        # self.progress = [0, self.personNum]
+        # self.canvas.update()
+        #
+        # self.loadExistingLabel()
 
     def nextPerson(self):
         self.person_id += 1

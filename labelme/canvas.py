@@ -43,7 +43,8 @@ CURSOR_DRAW    = Qt.CrossCursor
 CURSOR_MOVE    = Qt.ClosedHandCursor
 CURSOR_GRAB    = Qt.OpenHandCursor
 
-CONNECTED_PAIR_STR = [('chin', 'mouth'), ('nose', 'mouth'), ('l eye', 'nose'), ('r eye', 'nose')]
+from constants import class_pairs
+CONNECTED_PAIR_STR = class_pairs #[('chin', 'mouth'), ('nose', 'mouth'), ('l eye', 'nose'), ('r eye', 'nose')]
 CONNECTED_PAIR_CLR = []
 
 #class Canvas(QGLWidget):
@@ -441,22 +442,22 @@ class Canvas(QWidget):
     def paint_bbox(self, painter):
         pen = QPen(Qt.red)
         font = QFont()
-        font.setPointSize(20)
+        font.setPointSize(15)
         # Try using integer sizes for smoother drawing(?)
         pen.setWidth(max(5, int(round(2.0 / self.scale))))
         painter.setPen(pen)
         painter.setFont(font)
 
         # draw a rectangle
-        painter.drawText(10, 15, str(self.imgCnt))
+        painter.drawText(20, 20, ">>> image [%d]" % (self.imgCnt + 1))
         font.setPointSize(15)
         painter.setFont(font)
         
-        painter.drawText(30, 15, 'person: '+str(self.person_id))
-        painter.drawText(150, 15, 'prog: %d/%d' % tuple(self.progress))
+        #painter.drawText(30, 15, 'person: '+str(self.person_id))
+        #painter.drawText(150, 15, 'prog: %d/%d' % tuple(self.progress))
 
-        painter.drawRect(
-            self.person_bbox[0], self.person_bbox[1], self.person_bbox[2], self.person_bbox[3])
+        # painter.drawRect(
+        #     self.person_bbox[0], self.person_bbox[1], self.person_bbox[2], self.person_bbox[3])
 
     def xyxy_to_xywh(self, point1, point2):
         x1, y1 = point1.x(), point1.y()
@@ -533,10 +534,6 @@ class Canvas(QWidget):
                     p.drawLine(x1, y1, x2, y2)
 
         ### ENDING
-
-        # print ('--debug')
-        # p.drawLine(5,5,100,100)
-
         if self.current:
             self.current.paint(p)
             self.line.paint(p)
